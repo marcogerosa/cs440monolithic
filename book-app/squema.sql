@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS books (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    author TEXT NOT NULL,
+    year INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    book_id INTEGER NOT NULL,
+    rating INTEGER NOT NULL,
+    comment TEXT,
+    reviewer TEXT NOT NULL,
+    date TEXT NOT NULL,
+    FOREIGN KEY (book_id) REFERENCES books (id)
+);
