@@ -5,10 +5,17 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'  # Required for flash messages
 
+def init_db():
+    connection = get_db_connection()
+    with open('squema.sql', 'r') as f:
+        connection.executescript(f.read())
+    connection.commit()
+    connection.close()
+
 def get_db_connection():
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+    connection = sqlite3.connect('database.db')
+    connection.row_factory = sqlite3.Row
+    return connection
 
 @app.route('/')
 def index():
@@ -16,17 +23,17 @@ def index():
 
 @app.route('/books')
 def books():
-    conn = get_db_connection()
-    books = conn.execute('SELECT * FROM books').fetchall()
-    conn.close()
+    connection = get_db_connection()
+    books = connection.execute('SELECT * FROM books').fetchall()
+    connection.close()
     return render_template('books.html', books=books)
 
 @app.route('/books/<int:book_id>')
 def book_details(book_id):
-    conn = get_db_connection()
-    book = conn.execute('SELECT * FROM books WHERE id = ?', (book_id,)).fetchone()
-    reviews = conn.execute('SELECT * FROM reviews WHERE book_id = ?', (book_id,)).fetchall()
-    conn.close()
+    connection = get_db_connection()
+    book = connection.execute('SELECT * FROM books WHERE id = ?', (book_id,)).fetchone()
+    reviews = connection.execute('SELECT * FROM reviews WHERE book_id = ?', (book_id,)).fetchall()
+    connection.close()
     return render_template('reviews.html', book=book, reviews=reviews)
 
 @app.route('/books/add', methods=['POST'])
@@ -35,11 +42,11 @@ def add_book():
     author = request.form['author']
     year = request.form['year']
     
-    conn = get_db_connection()
-    conn.execute('INSERT INTO books (title, author, year) VALUES (?, ?, ?)',
+    connection = get_db_connection()
+    connection.execute('INSERT INTO books (title, author, year) VALUES (?, ?, ?)',
                 (title, author, year))
-    conn.commit()
-    conn.close()
+    connection.commit()
+    connection.close()
     flash('Book added successfully!')
     return redirect(url_for('books'))
 
@@ -51,27 +58,28 @@ def add_review():
     reviewer = request.form['reviewer']
     date = datetime.now().strftime("%Y-%m-%d")
     
-    conn = get_db_connection()
-    conn.execute('INSERT INTO reviews (book_id, rating, comment, reviewer, date) VALUES (?, ?, ?, ?, ?)',
+    connection = get_db_connection()
+    connection.execute('INSERT INTO reviews (book_id, rating, comment, reviewer, date) VALUES (?, ?, ?, ?, ?)',
                 (book_id, rating, comment, reviewer, date))
-    conn.commit()
-    conn.close()
+    connection.commit()
+    connection.close()
     flash('Review added successfully!')
     return redirect(url_for('book_details', book_id=book_id))
 
 @app.route('/api/books')
 def api_books():
-    conn = get_db_connection()
-    books = conn.execute('SELECT * FROM books').fetchall()
-    conn.close()
+    connection = get_db_connection()
+    books = connection.execute('SELECT * FROM books').fetchall()
+    connection.close()
     return jsonify([dict(book) for book in books])
 
 @app.route('/api/reviews/<int:book_id>')
 def api_reviews(book_id):
-    conn = get_db_connection()
-    reviews = conn.execute('SELECT * FROM reviews WHERE book_id = ?', (book_id,)).fetchall()
-    conn.close()
+    connection = get_db_connection()
+    reviews = connection.execute('SELECT * FROM reviews WHERE book_id = ?', (book_id,)).fetchall()
+    connection.close()
     return jsonify([dict(review) for review in reviews])
 
 if __name__ == '__main__':
+    init_db()
     app.run(debug=True)
