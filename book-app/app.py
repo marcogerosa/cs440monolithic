@@ -7,7 +7,7 @@ app.secret_key = 'your_secret_key_here'  # Required for flash messages
 
 def init_db():
     connection = get_db_connection()
-    with open('squema.sql', 'r') as f:
+    with open('schema.sql', 'r') as f:
         connection.executescript(f.read())
     connection.commit()
     connection.close()
